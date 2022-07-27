@@ -1,19 +1,27 @@
+import org.w3c.dom.ls.LSOutput;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException, ExecutionException {
-        Callable<Integer> myCallable1 = new MyCallable();
-        Callable<Integer> myCallable2 = new MyCallable();
-        Callable<Integer> myCallable3 = new MyCallable();
-        Callable<Integer> myCallable4 = new MyCallable();
+        List<Callable<Integer>> callableListForInvokeAny = new ArrayList<>();
+        for (int i = 0; i < 4; i++) {
+            callableListForInvokeAny.add(new MyCallable());
+        }
         ExecutorService threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-        List<Callable<Integer>> callableList =
-                new ArrayList<>(Arrays.asList(myCallable1, myCallable2, myCallable3, myCallable4));
 
-        System.out.println(threadPool.invokeAny(callableList));
+        System.out.println("Результат самой быстрой = "
+                + threadPool.invokeAny(callableListForInvokeAny));
+
+        System.out.println("\nТеперь запускаем все задачи");
+        MyCallable.resetNumber();       //обновляем счетчик потоков
+        List<Future<Integer>> futureList = threadPool.invokeAll(callableListForInvokeAny);
+
+        for (int i = 0; i < futureList.size(); i++) {
+            System.out.printf("Поток №%d отработал %d раз\n", i + 1, futureList.get(i).get());
+        }
         threadPool.shutdown();
     }
 }
